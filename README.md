@@ -5,6 +5,8 @@ Zeigt einen oder mehrere `calendar`-Entities gruppiert nach Tag, mit Uhrzeit, Or
 Legende pro Kalender. Design-Werte (Blur, Sättigung, Radien, Schatten, Farbpalette) sind auf die
 Schwester-Karten (`thermostat-glass-card`, `weather-glass-card`, `saugroboter-card`) abgestimmt.
 
+![demo](asset/calendar-glass-card.png)
+
 ## Features
 
 - Gruppiert Termine nach Tag über einen konfigurierbaren Zeitraum (1–14 Tage)
