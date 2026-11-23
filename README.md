@@ -52,7 +52,7 @@ entities:
 | `show_footer` | boolean | `true` | Fußzeile mit Gesamtzahl & Aktualisierungszeit |
 | `highlight_today` | boolean | `true` | Heute farblich hervorheben |
 | `refresh_minutes` | number | `15` | Intervall für automatisches Neuladen der Termine |
-| `look` | string | — (glass) | `solid` = ruhige, feste Flächen statt Glas, siehe *Solid look*. Ohne die Option bleibt die Karte im Glas-Stil. Im visuellen Editor: „Stil: Glas / Solide“ |
+| `look` | string | — (Theme, sonst glass) | `solid` = ruhige, feste Flächen statt Glas, `glass` erzwingt Glas, siehe *Solid look*. Ohne die Option (oder mit `theme`) folgt die Karte der Theme-Variable `lg-look`, sonst bleibt sie im Glas-Stil. Im visuellen Editor: „Stil: Vom Theme / Glas / Solide“ |
 | `blur` | number | `20` | Blur-Radius (px) des Glass-Panels |
 | `saturate` | number | `180` | Sättigung (%) des Glass-Panels |
 | `panel_shade` | number | `6` | Helligkeit des Panel-Hintergrunds (-100 bis 100) |
@@ -85,6 +85,16 @@ Kalenderfarben und alle Infos bleiben gleich; nur die Optik ändert sich:
 Die Karte liest nur die optionalen CSS-Variablen `--surface`, `--lg-tile-bg`, `--lg-radius`,
 `--primary-text-color` und `--secondary-text-color`, sie setzt sie nie selbst.
 
+Der Stil kann auch aus dem Theme kommen, für alle Liquid-Glass-Karten auf einmal: `lg-look: solid` (oder `glass`)
+im Home-Assistant-Theme setzen. `look:` an einer einzelnen Karte überschreibt das Theme. Die Karte liest die Variable
+neu, wenn sie eingehängt wird, wenn Theme oder Dunkelmodus in Home Assistant wechseln und beim Window-Event
+`lg-theme-changed` (für Seiten, die die Variable selbst umschalten).
+
+```yaml
+# im Home-Assistant-Theme
+lg-look: solid
+```
+
 ```yaml
 type: custom:calendar-glass-card
 look: solid
@@ -97,12 +107,13 @@ entities:
 
 ## Theme variables
 
-Like the other Liquid Glass cards, this card reads two optional CSS variables, so one theme can align all of them:
+Like the other Liquid Glass cards, this card reads optional CSS variables, so one theme can align all of them:
 
 ```yaml
 # in your Home Assistant theme
 lg-radius: 22px                          # corner radius of the glass panel
 lg-backdrop: blur(22px) saturate(180%)   # blur/saturation behind the panel
+lg-look: solid                           # solid or glass for all cards (see Solid look)
 ```
 
 Without them nothing changes. Options set on the card itself (e.g. `blur`) still win.
@@ -111,6 +122,7 @@ Without them nothing changes. Options set on the card itself (e.g. `blur`) still
 
 ### 1.2.0
 - Neue Option `look: solid`: ruhige, feste Flächen statt Glas – kein Blur, keine Verläufe oder Glows, feste Terminzeilen, laufender Termin in Kalenderfarbe getönt (siehe *Solid look*). Im visuellen Editor als „Stil: Glas / Solide“. Ohne die Option sieht die Karte aus wie bisher.
+- Der Stil kann aus dem Theme kommen: `lg-look: solid` im Theme schaltet alle Karten ohne `look:` um; `look: glass` bzw. `look: solid` an der Karte überschreibt das (siehe *Solid look*). Im visuellen Editor neu: „Vom Theme“.
 
 ### 1.1.0
 - Reads the optional theme variables `--lg-radius` and `--lg-backdrop` (see *Theme variables*).
