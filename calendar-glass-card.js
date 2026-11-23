@@ -1,3 +1,7 @@
+const CARD_VERSION = "1.1.0";
+// eslint-disable-next-line no-console
+console.info(`%c CALENDAR-GLASS-CARD %c v${CARD_VERSION} `, "color: white; background: #6366f1; font-weight: 700;", "color: #6366f1; background: white; font-weight: 700;");
+
 class CalendarGlassCard extends HTMLElement {
   setConfig(config) {
     if (!config.entities || !Array.isArray(config.entities) || !config.entities.length) {
@@ -146,6 +150,43 @@ class CalendarGlassCard extends HTMLElement {
     return String(str == null ? "" : str).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   }
 
+  // UI texts follow Home Assistant's language (German for "de*", English
+  // otherwise); every one can still be overridden per card via the
+  // existing *_label options.
+  _t(key, n) {
+    const lang = String(this._locale()).toLowerCase().startsWith("de") ? "de" : "en";
+    const T = {
+      de: {
+        today: "Heute",
+        todayAndNext: (k) => "Heute und die n\u00e4chsten " + k + " Tage",
+        thisWeek: "Diese Woche",
+        allDay: "Ganzt\u00e4gig",
+        noEvents: "Keine Termine",
+        events: (k) => k + (k === 1 ? " Termin" : " Termine"),
+        inRange: "in diesem Zeitraum",
+        updated: "Aktualisiert",
+        noTitle: "(ohne Titel)",
+        loading: "Termine werden geladen \u2026",
+        loadError: "Kalender konnten nicht geladen werden: ",
+      },
+      en: {
+        today: "Today",
+        todayAndNext: (k) => "Today and the next " + k + " days",
+        thisWeek: "This week",
+        allDay: "All day",
+        noEvents: "No events",
+        events: (k) => k + (k === 1 ? " event" : " events"),
+        inRange: "in this period",
+        updated: "Updated",
+        noTitle: "(no title)",
+        loading: "Loading events \u2026",
+        loadError: "Could not load calendars: ",
+      },
+    }[lang];
+    const v = T[key];
+    return typeof v === "function" ? v(n) : v;
+  }
+
   _locale() {
     return this._config.locale || this._hass?.locale?.language || navigator.language || "de-DE";
   }
@@ -215,7 +256,7 @@ class CalendarGlassCard extends HTMLElement {
           allDay,
           start: startDate,
           end: endDate,
-          summary: ev.summary || "(ohne Titel)",
+          summary: ev.summary || this._t("noTitle"),
           location: ev.location || "",
           description: ev.description || "",
         };
@@ -331,7 +372,7 @@ class CalendarGlassCard extends HTMLElement {
     const esc = CalendarGlassCard._escape;
 
     if (this._loading) {
-      this._root.innerHTML = '<div class="sheen"></div><div class="msg">Termine werden geladen ' + String.fromCharCode(8230) + '</div>';
+      this._root.innerHTML = '<div class="sheen"></div><div class="msg">' + CalendarGlassCard._escape(this._t("loading")) + '</div>';
       return;
     }
 
@@ -367,13 +408,13 @@ class CalendarGlassCard extends HTMLElement {
         days[days.length - 1].date.toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" })
       : "";
     const defaultTitle = this._weekStart === "today"
-      ? (this._days <= 1 ? "Heute" : "Heute und die n" + String.fromCharCode(228) + "chsten " + (this._days - 1) + " Tage")
-      : "Diese Woche";
+      ? (this._days <= 1 ? this._t("today") : this._t("todayAndNext", this._days - 1))
+      : this._t("thisWeek");
 
     const evHtml = (ev) => {
       const isNow = !ev.allDay && ev.start <= now && ev.end > now;
       const timeCol = ev.allDay
-        ? '<span class="t-allday">' + esc(this._config.all_day_label || "Ganzt" + String.fromCharCode(228) + "gig") + "</span>"
+        ? '<span class="t-allday">' + esc(this._config.all_day_label || this._t("allDay")) + "</span>"
         : '<div class="time"><span class="t1">' + esc(this._fmtTime(ev.start)) + '</span><span class="t2">' + esc(this._fmtTime(ev.end)) + "</span></div>";
       const loc = this._showLocation && ev.location ? '<span class="loc">' + esc(ev.location) + "</span>" : "";
       return '<div class="ev' + (ev.allDay ? " allday" : "") + (isNow ? " now" : "") + '" data-entity="' + esc(ev.def.entity) + '">' +
@@ -389,11 +430,11 @@ class CalendarGlassCard extends HTMLElement {
       const head = '<div class="day-head">' +
         '<div class="day-name"><b>' + esc(d.date.toLocaleDateString(locale, { weekday: "long" })) + "</b>" +
         "<span>" + esc(d.date.toLocaleDateString(locale, { day: "numeric", month: "long" })) + "</span></div>" +
-        (isToday ? '<span class="badge-today">' + esc(this._config.today_label || "Heute") + "</span>" : "") +
+        (isToday ? '<span class="badge-today">' + esc(this._config.today_label || this._t("today")) + "</span>" : "") +
         '<div class="rule"></div>' +
         (d.events.length
-          ? '<span class="count">' + d.events.length + (d.events.length === 1 ? " Termin" : " Termine") + "</span>"
-          : '<span class="empty">' + esc(this._config.empty_label || "Keine Termine") + "</span>") +
+          ? '<span class="count">' + esc(this._t("events", d.events.length)) + "</span>"
+          : '<span class="empty">' + esc(this._config.empty_label || this._t("noEvents")) + "</span>") +
         "</div>";
       const body = d.events.length ? '<div class="events">' + d.events.map(evHtml).join("") + "</div>" : "";
       return isToday
@@ -418,10 +459,10 @@ class CalendarGlassCard extends HTMLElement {
         : "") +
       "</div>" +
       '<div class="list">' + days.map(dayHtml).join("") + "</div>" +
-      (this._error ? '<div class="msg">Kalender konnten nicht geladen werden: ' + esc(this._error) + "</div>" : "") +
+      (this._error ? '<div class="msg">' + esc(this._t("loadError")) + esc(this._error) + "</div>" : "") +
       (this._showFooter
-        ? '<div class="foot"><span>' + total + (total === 1 ? " Termin" : " Termine") + " " + esc(this._config.range_label || "in diesem Zeitraum") + "</span>" +
-          "<span>" + esc(this._config.updated_label || "Aktualisiert") + " " + esc(this._fmtTime(new Date())) + "</span></div>"
+        ? '<div class="foot"><span>' + esc(this._t("events", total)) + " " + esc(this._config.range_label || this._t("inRange")) + "</span>" +
+          "<span>" + esc(this._config.updated_label || this._t("updated")) + " " + esc(this._fmtTime(new Date())) + "</span></div>"
         : "");
 
     this._root.querySelectorAll(".ev[data-entity]").forEach((el) => {

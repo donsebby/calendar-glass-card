@@ -57,13 +57,19 @@ entities:
 | `panel_shade` | number | `6` | Helligkeit des Panel-Hintergrunds (-100 bis 100) |
 | `tile_shade` | number | `9` | Helligkeit der Termin-Kacheln (-100 bis 100) |
 | `locale` | string | *(HA-Locale)* | Locale für Datums-/Zeitformatierung |
-| `all_day_label` / `today_label` / `empty_label` / `range_label` / `updated_label` | string | *(deutsch)* | Textüberschreibungen für Lokalisierung |
+| `all_day_label` / `today_label` / `empty_label` / `range_label` / `updated_label` | string | *(nach HA-Sprache)* | Eigene Texte statt der eingebauten. Ohne Angabe folgen alle Texte der Home-Assistant-Sprache: Deutsch bei `de`, sonst Englisch (seit 1.1.0) |
 
 ### Farben
 
 `color` je Entity akzeptiert: `deep-orange`, `orange`, `teal`, `indigo`, `cyan`, `pink`, `green`,
 `red`, `blue`, `purple`, `amber`, `yellow`, `brown`, `grey`/`gray`, oder einen Hex-Code (`#RRGGBB`).
 Ohne Angabe wird aus `indigo, teal, amber, cyan, pink, green` rotiert.
+
+## Changelog
+
+### 1.1.0
+- Texte ("Heute", "Termine", "Ganztägig", …) folgen der Home-Assistant-Sprache: Deutsch bei `de`, sonst Englisch. Die `*_label`-Optionen überschreiben weiterhin.
+- Versions-Banner in der Browser-Konsole.
 
 ## License
 
