@@ -52,6 +52,7 @@ entities:
 | `show_footer` | boolean | `true` | Fußzeile mit Gesamtzahl & Aktualisierungszeit |
 | `highlight_today` | boolean | `true` | Heute farblich hervorheben |
 | `refresh_minutes` | number | `15` | Intervall für automatisches Neuladen der Termine |
+| `look` | string | — (glass) | `solid` = ruhige, feste Flächen statt Glas, siehe *Solid look*. Ohne die Option bleibt die Karte im Glas-Stil. Im visuellen Editor: „Stil: Glas / Solide“ |
 | `blur` | number | `20` | Blur-Radius (px) des Glass-Panels |
 | `saturate` | number | `180` | Sättigung (%) des Glass-Panels |
 | `panel_shade` | number | `6` | Helligkeit des Panel-Hintergrunds (-100 bis 100) |
@@ -64,6 +65,35 @@ entities:
 `color` je Entity akzeptiert: `deep-orange`, `orange`, `teal`, `indigo`, `cyan`, `pink`, `green`,
 `red`, `blue`, `purple`, `amber`, `yellow`, `brown`, `grey`/`gray`, oder einen Hex-Code (`#RRGGBB`).
 Ohne Angabe wird aus `indigo, teal, amber, cyan, pink, green` rotiert.
+
+## Solid look
+
+`look: solid` ersetzt das Milchglas durch ruhige, feste Flächen – für Dashboards, die hinter den Karten
+einen eigenen Hintergrund zeichnen (z. B. einen animierten Himmel). Aufbau, Tage, Gruppierung, Legende,
+Kalenderfarben und alle Infos bleiben gleich; nur die Optik ändert sich:
+
+- **Panel:** feste Fläche `--surface` (Standard: Kartenfarbe des Themes zu 88 %), feiner Rand,
+  Radius `--lg-radius` (20 px), 16 px Innenabstand – kein Blur, kein Glanz, kein Schatten.
+- **Termine:** feste Zeilen `--lg-tile-bg` (Standard: dezente Mischung der Textfarbe), Radius `--lg-radius` − 4 px,
+  mindestens 44 px hoch. Der farbige Streifen und die Legenden-Punkte behalten die Kalenderfarbe, aber ohne Glow.
+  Ein **gerade laufender** Termin ist mit seiner Kalenderfarbe getönt.
+- **Heute:** ruhige Fläche mit „Heute“-Pille statt Leuchtrahmen.
+- **Text:** Titel, Tage und Termine 15 px, Nebeninfos 13 px, Zeiten und Zähler mit gleich breiten Ziffern.
+- `blur`, `saturate`, `panel_shade` und `tile_shade` wirken in diesem Stil nicht. Übergänge entfallen bei
+  `prefers-reduced-motion`.
+
+Die Karte liest nur die optionalen CSS-Variablen `--surface`, `--lg-tile-bg`, `--lg-radius`,
+`--primary-text-color` und `--secondary-text-color`, sie setzt sie nie selbst.
+
+```yaml
+type: custom:calendar-glass-card
+look: solid
+entities:
+  - entity: calendar.arbeit
+    color: indigo
+  - entity: calendar.familie
+    color: teal
+```
 
 ## Theme variables
 
@@ -78,6 +108,9 @@ lg-backdrop: blur(22px) saturate(180%)   # blur/saturation behind the panel
 Without them nothing changes. Options set on the card itself (e.g. `blur`) still win.
 
 ## Changelog
+
+### 1.2.0
+- Neue Option `look: solid`: ruhige, feste Flächen statt Glas – kein Blur, keine Verläufe oder Glows, feste Terminzeilen, laufender Termin in Kalenderfarbe getönt (siehe *Solid look*). Im visuellen Editor als „Stil: Glas / Solide“. Ohne die Option sieht die Karte aus wie bisher.
 
 ### 1.1.0
 - Reads the optional theme variables `--lg-radius` and `--lg-backdrop` (see *Theme variables*).

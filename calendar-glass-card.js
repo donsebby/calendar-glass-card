@@ -1,4 +1,4 @@
-const CARD_VERSION = "1.1.0";
+const CARD_VERSION = "1.2.0";
 // eslint-disable-next-line no-console
 console.info(`%c CALENDAR-GLASS-CARD %c v${CARD_VERSION} `, "color: white; background: #6366f1; font-weight: 700;", "color: #6366f1; background: white; font-weight: 700;");
 
@@ -27,7 +27,13 @@ class CalendarGlassCard extends HTMLElement {
     if (!this.shadowRoot) this.attachShadow({ mode: "open" });
     this.shadowRoot.innerHTML = "";
     this._buildStyles();
+    // look: solid is opt-in; anything else keeps the glass look untouched.
+    this._root.classList.toggle("solid", this._isSolid());
     if (this._hass) this._fetchEvents();
+  }
+
+  _isSolid() {
+    return this._config?.look === "solid";
   }
 
   static getConfigForm() {
@@ -40,6 +46,7 @@ class CalendarGlassCard extends HTMLElement {
         { name: "show_location", selector: { boolean: {} } },
         { name: "show_legend", selector: { boolean: {} } },
         { name: "highlight_today", selector: { boolean: {} } },
+        { name: "look", selector: { select: { mode: "dropdown", options: [{ value: "glass", label: "Glas" }, { value: "solid", label: "Solide" }] } } },
         { name: "tile_shade", selector: { number: { min: -100, max: 100, step: 5, mode: "slider", unit_of_measurement: "%" } } },
         { name: "panel_shade", selector: { number: { min: -100, max: 100, step: 5, mode: "slider", unit_of_measurement: "%" } } },
       ],
@@ -52,6 +59,7 @@ class CalendarGlassCard extends HTMLElement {
           case "show_location": return "Show location";
           case "show_legend": return "Show calendar legend";
           case "highlight_today": return "Highlight today";
+          case "look": return "Stil";
           case "tile_shade": return "Event brightness";
           case "panel_shade": return "Panel brightness";
         }
@@ -60,6 +68,7 @@ class CalendarGlassCard extends HTMLElement {
       computeHelper: (s) => {
         switch (s.name) {
           case "week_start": return "monday / sunday = current calendar week, today = the next N days";
+          case "look": return "Solide = calm solid surfaces without blur or glow (blur, saturate and the brightness sliders then have no effect)";
           case "tile_shade": return "Negative = darker, positive = lighter (background of each event row)";
           case "panel_shade": return "Negative = darker, positive = lighter (background of the whole widget)";
         }
@@ -353,6 +362,63 @@ class CalendarGlassCard extends HTMLElement {
       @media (max-width: 420px) {
         .ev { grid-template-columns:3px 62px 1fr; gap:10px; }
       }
+      /* look: solid - calm solid surfaces instead of glass (opt-in, the
+         glass rules above stay untouched). Same layout, days, grouping and
+         calendar colours; no blur, sheen, gradients or glows. A running
+         event is tinted with its calendar colour (--c, set in solid only). */
+      .wrap.solid {
+        --s-tile: var(--lg-tile-bg, color-mix(in srgb, var(--primary-text-color, #fff) 8%, transparent));
+        padding:16px;
+        border-radius:var(--lg-radius, 20px);
+        background: var(--surface, color-mix(in srgb, var(--card-background-color, #1c1f28) 88%, transparent));
+        backdrop-filter:none; -webkit-backdrop-filter:none;
+        border:1px solid rgba(255,255,255,0.06);
+        box-shadow:none;
+      }
+      .wrap.solid .sheen { display:none; }
+      .wrap.solid .h-title { font-size:15px; font-weight:600; letter-spacing:0; }
+      .wrap.solid .h-sub { font-size:13px; }
+      .wrap.solid .legend-item { position:relative; font-size:13px; transition:opacity .2s ease; }
+      .wrap.solid .legend-item::before { content:""; position:absolute; left:-6px; right:-6px; top:-14px; bottom:-14px; }
+      .wrap.solid .dot { width:8px; height:8px; }
+      .wrap.solid .day-name b { font-size:15px; font-weight:600; }
+      .wrap.solid .day-name span { font-size:13px; }
+      .wrap.solid .rule { background:rgba(255,255,255,0.06); }
+      .wrap.solid .count, .wrap.solid .empty { font-size:13px; font-variant-numeric:tabular-nums; }
+      .wrap.solid .today-block {
+        border-radius:var(--lg-radius, 20px);
+        background: color-mix(in srgb, var(--primary-text-color, #fff) 4%, transparent);
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+      }
+      .wrap.solid .badge-today {
+        font-size:12px; font-weight:600; letter-spacing:0.04em;
+        color:var(--primary-text-color, #fff);
+        background: color-mix(in srgb, var(--primary-text-color, #fff) 14%, transparent);
+        border:none; box-shadow:none;
+      }
+      .wrap.solid .ev {
+        box-sizing:border-box; min-height:44px;
+        background:var(--s-tile);
+        border:1px solid rgba(255,255,255,0.04);
+        border-radius:calc(var(--lg-radius, 20px) - 4px);
+        box-shadow:none;
+        transition:background .2s ease;
+      }
+      .wrap.solid .ev:hover { background: color-mix(in srgb, var(--primary-text-color, #fff) 5%, var(--s-tile)); border-color:rgba(255,255,255,0.04); }
+      .wrap.solid .ev.now, .wrap.solid .ev.now:hover {
+        background: color-mix(in srgb, var(--c) 20%, var(--s-tile));
+        border-color:rgba(255,255,255,0.04); box-shadow:none;
+      }
+      .wrap.solid .tint { box-shadow:none; }
+      .wrap.solid .t1 { font-size:15px; font-weight:500; letter-spacing:0; }
+      .wrap.solid .t2 { font-size:13px; }
+      .wrap.solid .t-allday { font-size:13px; font-weight:500; letter-spacing:0; }
+      .wrap.solid .summary { font-size:15px; font-weight:600; }
+      .wrap.solid .loc { font-size:13px; }
+      .wrap.solid .foot { font-size:13px; padding:12px 6px 0; }
+      @media (prefers-reduced-motion: reduce) {
+        .wrap.solid .ev, .wrap.solid .legend-item, .wrap.solid .dot { transition:none; }
+      }
     `;
     this.shadowRoot.appendChild(style);
     this._root = document.createElement("div");
@@ -414,14 +480,17 @@ class CalendarGlassCard extends HTMLElement {
       ? (this._days <= 1 ? this._t("today") : this._t("todayAndNext", this._days - 1))
       : this._t("thisWeek");
 
+    // look: solid - no glows on the colour stripes and legend dots.
+    const solid = this._isSolid();
     const evHtml = (ev) => {
       const isNow = !ev.allDay && ev.start <= now && ev.end > now;
       const timeCol = ev.allDay
         ? '<span class="t-allday">' + esc(this._config.all_day_label || this._t("allDay")) + "</span>"
         : '<div class="time"><span class="t1">' + esc(this._fmtTime(ev.start)) + '</span><span class="t2">' + esc(this._fmtTime(ev.end)) + "</span></div>";
       const loc = this._showLocation && ev.location ? '<span class="loc">' + esc(ev.location) + "</span>" : "";
-      return '<div class="ev' + (ev.allDay ? " allday" : "") + (isNow ? " now" : "") + '" data-entity="' + esc(ev.def.entity) + '">' +
-        '<div class="tint" style="background:rgb(' + ev.def.rgb + ');box-shadow:0 0 10px rgba(' + ev.def.rgb + ',0.65);"></div>' +
+      return '<div class="ev' + (ev.allDay ? " allday" : "") + (isNow ? " now" : "") + '" data-entity="' + esc(ev.def.entity) + '"' +
+        (solid ? ' style="--c:rgb(' + ev.def.rgb + ')"' : "") + ">" +
+        '<div class="tint" style="background:rgb(' + ev.def.rgb + ');' + (solid ? "" : "box-shadow:0 0 10px rgba(" + ev.def.rgb + ",0.65);") + '"></div>' +
         timeCol +
         '<div class="body"><span class="summary">' + esc(ev.summary) + "</span>" + loc + "</div>" +
         "</div>";
@@ -456,7 +525,7 @@ class CalendarGlassCard extends HTMLElement {
             const isHidden = this._hiddenEntities.has(def.entity);
             const dotStyle = isHidden
               ? "background:rgba(255,255,255,0.25);box-shadow:none;"
-              : "background:rgb(" + def.rgb + ");box-shadow:0 0 8px rgba(" + def.rgb + ",0.8);";
+              : "background:rgb(" + def.rgb + ");" + (solid ? "" : "box-shadow:0 0 8px rgba(" + def.rgb + ",0.8);");
             return '<div class="legend-item' + (isHidden ? " off" : "") + '" data-entity="' + esc(def.entity) + '"><span class="dot" style="' + dotStyle + '"></span><span>' + esc(def.name) + "</span></div>";
           }).join("") + "</div>"
         : "") +
