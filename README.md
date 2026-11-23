@@ -32,12 +32,12 @@ type: custom:calendar-glass-card
 title: Kalender
 days: 7
 entities:
-  - entity: calendar.termine_3
-    name: Termine (Sebbo)
+  - entity: calendar.arbeit
+    name: Arbeit
     color: indigo
-  - entity: calendar.termine_jazz
-    name: Termine (Jazz)
-    color: pink
+  - entity: calendar.familie
+    name: Familie
+    color: teal
 ```
 
 | Option | Typ | Default | Beschreibung |
