@@ -273,16 +273,19 @@ class CalendarGlassCard extends HTMLElement {
   _buildStyles() {
     const panelBg = CalendarGlassCard._shadeCss(this._panelShade, 0.3, 0.5);
     const tileBg = CalendarGlassCard._shadeCss(this._tileShade, 0.3, 0.5);
+    // Card options win; otherwise a theme can set --lg-backdrop for all glass cards.
+    const ownBackdrop = `blur(${this._blur}px) saturate(${this._saturate}%)`;
+    const backdrop = this._config.blur != null || this._config.saturate != null ? ownBackdrop : `var(--lg-backdrop, ${ownBackdrop})`;
     const style = document.createElement("style");
     style.textContent = `
       :host { display:block; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
       .wrap {
         position:relative;
         padding:16px 16px 10px;
-        border-radius:22px;
+        border-radius:var(--lg-radius, 22px);
         background: ${panelBg};
-        backdrop-filter: blur(${this._blur}px) saturate(${this._saturate}%);
-        -webkit-backdrop-filter: blur(${this._blur}px) saturate(${this._saturate}%);
+        backdrop-filter: ${backdrop};
+        -webkit-backdrop-filter: ${backdrop};
         border: 1px solid rgba(255,255,255,0.10);
         box-shadow: 0 20px 40px -20px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.10);
         overflow:hidden;

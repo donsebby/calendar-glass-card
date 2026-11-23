@@ -65,9 +65,22 @@ entities:
 `red`, `blue`, `purple`, `amber`, `yellow`, `brown`, `grey`/`gray`, oder einen Hex-Code (`#RRGGBB`).
 Ohne Angabe wird aus `indigo, teal, amber, cyan, pink, green` rotiert.
 
+## Theme variables
+
+Like the other Liquid Glass cards, this card reads two optional CSS variables, so one theme can align all of them:
+
+```yaml
+# in your Home Assistant theme
+lg-radius: 22px                          # corner radius of the glass panel
+lg-backdrop: blur(22px) saturate(180%)   # blur/saturation behind the panel
+```
+
+Without them nothing changes. Options set on the card itself (e.g. `blur`) still win.
+
 ## Changelog
 
 ### 1.1.0
+- Reads the optional theme variables `--lg-radius` and `--lg-backdrop` (see *Theme variables*).
 - Texte ("Heute", "Termine", "Ganztägig", …) folgen der Home-Assistant-Sprache: Deutsch bei `de`, sonst Englisch. Die `*_label`-Optionen überschreiben weiterhin.
 - Versions-Banner in der Browser-Konsole.
 
