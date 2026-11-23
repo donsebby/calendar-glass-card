@@ -2,6 +2,19 @@ const CARD_VERSION = "1.2.0-dev";
 // eslint-disable-next-line no-console
 console.info(`%c CALENDAR-GLASS-CARD %c v${CARD_VERSION} `, "color: white; background: #6366f1; font-weight: 700;", "color: #6366f1; background: white; font-weight: 700;");
 
+// Style from the theme: `--lg-look` (solid | glass, quotes tolerated) decides
+// for all Liquid Glass cards; `look:` in the card config overrides it.
+const lgThemeLook = (el) => {
+  let v = "";
+  try {
+    v = getComputedStyle(el).getPropertyValue("--lg-look") || "";
+  } catch (err) {
+    /* not rendered yet */
+  }
+  v = v.trim().replace(/^["']|["']$/g, "").trim().toLowerCase();
+  return v === "solid" || v === "glass" ? v : "";
+};
+
 class CalendarGlassCard extends HTMLElement {
   setConfig(config) {
     if (!config.entities || !Array.isArray(config.entities) || !config.entities.length) {
@@ -27,13 +40,36 @@ class CalendarGlassCard extends HTMLElement {
     if (!this.shadowRoot) this.attachShadow({ mode: "open" });
     this.shadowRoot.innerHTML = "";
     this._buildStyles();
-    // look: solid is opt-in; anything else keeps the glass look untouched.
+    // look: solid is opt-in (card config or theme variable --lg-look);
+    // anything else keeps the glass look untouched.
+    this._look = this._effectiveLook();
     this._root.classList.toggle("solid", this._isSolid());
     if (this._hass) this._fetchEvents();
   }
 
   _isSolid() {
-    return this._config?.look === "solid";
+    return this._look === "solid";
+  }
+
+  _configLook() {
+    const look = this._config?.look;
+    return look === "solid" || look === "glass" ? look : "";
+  }
+
+  _effectiveLook() {
+    return this._configLook() || lgThemeLook(this) || "glass";
+  }
+
+  // Re-read --lg-look (only when the card config has no `look`). If the
+  // effective look changed, switch the class and redraw the event rows
+  // (their colour stripes have no glow in the solid look).
+  _checkLook() {
+    if (!this._config || !this._root || this._configLook()) return;
+    const look = this._effectiveLook();
+    if (look === this._look) return;
+    this._look = look;
+    this._root.classList.toggle("solid", this._isSolid());
+    this._render();
   }
 
   static getConfigForm() {
@@ -46,7 +82,7 @@ class CalendarGlassCard extends HTMLElement {
         { name: "show_location", selector: { boolean: {} } },
         { name: "show_legend", selector: { boolean: {} } },
         { name: "highlight_today", selector: { boolean: {} } },
-        { name: "look", selector: { select: { mode: "dropdown", options: [{ value: "glass", label: "Glas" }, { value: "solid", label: "Solide" }] } } },
+        { name: "look", selector: { select: { mode: "dropdown", options: [{ value: "theme", label: "Vom Theme" }, { value: "glass", label: "Glas" }, { value: "solid", label: "Solide" }] } } },
         { name: "tile_shade", selector: { number: { min: -100, max: 100, step: 5, mode: "slider", unit_of_measurement: "%" } } },
         { name: "panel_shade", selector: { number: { min: -100, max: 100, step: 5, mode: "slider", unit_of_measurement: "%" } } },
       ],
@@ -68,7 +104,7 @@ class CalendarGlassCard extends HTMLElement {
       computeHelper: (s) => {
         switch (s.name) {
           case "week_start": return "monday / sunday = current calendar week, today = the next N days";
-          case "look": return "Solide = calm solid surfaces without blur or glow (blur, saturate and the brightness sliders then have no effect)";
+          case "look": return "Vom Theme = follows lg-look in the theme (glass without it); Solide = calm solid surfaces without blur or glow (blur, saturate and the brightness sliders then have no effect)";
           case "tile_shade": return "Negative = darker, positive = lighter (background of each event row)";
           case "panel_shade": return "Negative = darker, positive = lighter (background of the whole widget)";
         }
@@ -85,6 +121,15 @@ class CalendarGlassCard extends HTMLElement {
       this._fetchEvents();
       this._startTimer();
     }
+    // Theme switched (or dark mode toggled): re-read --lg-look. Cheap
+    // identity checks only - no getComputedStyle on every hass tick.
+    const th = hass.themes;
+    if (first || th !== this._themesRef || th?.theme !== this._themeName || th?.darkMode !== this._themeDark) {
+      this._themesRef = th;
+      this._themeName = th?.theme;
+      this._themeDark = th?.darkMode;
+      this._checkLook();
+    }
     // Note: intentionally NOT re-rendering here. `hass` is set on every state
     // change anywhere in the house (often several times per second), and a
     // full innerHTML rebuild on each tick tears down/recreates the legend and
@@ -96,9 +141,17 @@ class CalendarGlassCard extends HTMLElement {
 
   connectedCallback() {
     if (this._config && this._hass) this._startTimer();
+    if (!this._onThemeChanged) this._onThemeChanged = () => this._checkLook();
+    window.addEventListener("lg-theme-changed", this._onThemeChanged);
+    this._checkLook();
+    // The theme may only apply after the card is attached.
+    cancelAnimationFrame(this._lookFrame);
+    this._lookFrame = requestAnimationFrame(() => this._checkLook());
   }
 
   disconnectedCallback() {
+    cancelAnimationFrame(this._lookFrame);
+    if (this._onThemeChanged) window.removeEventListener("lg-theme-changed", this._onThemeChanged);
     if (this._timer) clearInterval(this._timer);
     this._timer = null;
     if (this._renderTimer) clearInterval(this._renderTimer);
