@@ -1,4 +1,4 @@
-const CARD_VERSION = "1.3.2";
+const CARD_VERSION = "1.3.1";
 // eslint-disable-next-line no-console
 console.info(`%c CALENDAR-GLASS-CARD %c v${CARD_VERSION} `, "color: white; background: #6366f1; font-weight: 700;", "color: #6366f1; background: white; font-weight: 700;");
 
@@ -478,17 +478,6 @@ class CalendarGlassCard extends HTMLElement {
       @media (prefers-reduced-motion: reduce) {
         .wrap.solid .ev, .wrap.solid .legend-item, .wrap.solid .dot { transition:none; }
       }
-      /* surface: theme - the panel takes the theme's card surface, blur,
-         border, shadow and rounding instead of its own glass. */
-      .wrap.theme {
-        background: var(--pane-surface, var(--ha-card-background, var(--card-background-color, rgba(30,32,40,0.6))));
-        backdrop-filter: var(--pane-backdrop, var(--ha-card-backdrop-filter, none));
-        -webkit-backdrop-filter: var(--pane-backdrop, var(--ha-card-backdrop-filter, none));
-        border: var(--ha-card-border-width, 1px) solid var(--pane-border, var(--ha-card-border-color, rgba(255,255,255,0.08)));
-        box-shadow: var(--ha-card-box-shadow, none);
-        border-radius: var(--pane-radius, var(--ha-card-border-radius, 20px));
-      }
-      .wrap.theme .sheen { display:none; }
       /* flat: one surface only (opt-in). Today is marked by its badge, events
          are rows with the colour stripe - no boxes inside the card. */
       .wrap.flat .today-block, .wrap.flat.solid .today-block { margin:0; padding:0; background:none; box-shadow:none; border-radius:0; }
@@ -510,7 +499,6 @@ class CalendarGlassCard extends HTMLElement {
     this._root = document.createElement("div");
     this._root.className = "wrap";
     this._root.classList.toggle("flat", this._flat);
-    this._root.classList.toggle("theme", this._config.surface === "theme");
     this.shadowRoot.appendChild(this._root);
   }
 
