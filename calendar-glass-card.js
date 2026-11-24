@@ -1,4 +1,4 @@
-const CARD_VERSION = "1.2.0";
+const CARD_VERSION = "1.3.0";
 // eslint-disable-next-line no-console
 console.info(`%c CALENDAR-GLASS-CARD %c v${CARD_VERSION} `, "color: white; background: #6366f1; font-weight: 700;", "color: #6366f1; background: white; font-weight: 700;");
 
@@ -32,6 +32,8 @@ class CalendarGlassCard extends HTMLElement {
     this._showLegend = config.show_legend !== false;
     this._showFooter = config.show_footer !== false;
     this._highlightToday = config.highlight_today !== false;
+    // flat: one surface only - no box around today, events as plain rows.
+    this._flat = config.flat === true;
     this._refreshMinutes = config.refresh_minutes ?? 15;
     this._events = null;
     this._loading = true;
@@ -81,6 +83,7 @@ class CalendarGlassCard extends HTMLElement {
         { name: "show_empty_days", selector: { boolean: {} } },
         { name: "show_location", selector: { boolean: {} } },
         { name: "show_legend", selector: { boolean: {} } },
+        { name: "flat", selector: { boolean: {} } },
         { name: "highlight_today", selector: { boolean: {} } },
         { name: "look", selector: { select: { mode: "dropdown", options: [{ value: "theme", label: "Vom Theme" }, { value: "glass", label: "Glas" }, { value: "solid", label: "Solide" }] } } },
         { name: "tile_shade", selector: { number: { min: -100, max: 100, step: 5, mode: "slider", unit_of_measurement: "%" } } },
@@ -94,6 +97,7 @@ class CalendarGlassCard extends HTMLElement {
           case "show_empty_days": return "Show days without events";
           case "show_location": return "Show location";
           case "show_legend": return "Show calendar legend";
+          case "flat": return "Flat list (no boxes inside the card)";
           case "highlight_today": return "Highlight today";
           case "look": return "Stil";
           case "tile_shade": return "Event brightness";
@@ -472,10 +476,23 @@ class CalendarGlassCard extends HTMLElement {
       @media (prefers-reduced-motion: reduce) {
         .wrap.solid .ev, .wrap.solid .legend-item, .wrap.solid .dot { transition:none; }
       }
+      /* flat: one surface only (opt-in). Today is marked by its badge, events
+         are rows with the colour stripe - no boxes inside the card. */
+      .wrap.flat .today-block, .wrap.flat.solid .today-block { margin:0; padding:0; background:none; box-shadow:none; border-radius:0; }
+      .wrap.flat .today-block .day-head { padding-top:8px; }
+      .wrap.flat .events { gap:2px; }
+      .wrap.flat .ev, .wrap.flat.solid .ev {
+        background:none; border:none; box-shadow:none; min-height:0;
+        padding:8px 6px; border-radius:12px;
+      }
+      .wrap.flat .ev:hover, .wrap.flat.solid .ev:hover { background: color-mix(in srgb, var(--primary-text-color, #fff) 6%, transparent); }
+      .wrap.flat .ev.now, .wrap.flat.solid .ev.now, .wrap.flat.solid .ev.now:hover { background: color-mix(in srgb, var(--c) 16%, transparent); box-shadow:none; }
+      .wrap.flat .ev.allday { grid-template-columns:3px 1fr; padding:8px 6px; }
     `;
     this.shadowRoot.appendChild(style);
     this._root = document.createElement("div");
     this._root.className = "wrap";
+    this._root.classList.toggle("flat", this._flat);
     this.shadowRoot.appendChild(this._root);
   }
 
@@ -537,12 +554,14 @@ class CalendarGlassCard extends HTMLElement {
     const solid = this._isSolid();
     const evHtml = (ev) => {
       const isNow = !ev.allDay && ev.start <= now && ev.end > now;
-      const timeCol = ev.allDay
+      const timeCol = ev.allDay && this._flat
+        ? ""
+        : ev.allDay
         ? '<span class="t-allday">' + esc(this._config.all_day_label || this._t("allDay")) + "</span>"
         : '<div class="time"><span class="t1">' + esc(this._fmtTime(ev.start)) + '</span><span class="t2">' + esc(this._fmtTime(ev.end)) + "</span></div>";
       const loc = this._showLocation && ev.location ? '<span class="loc">' + esc(ev.location) + "</span>" : "";
       return '<div class="ev' + (ev.allDay ? " allday" : "") + (isNow ? " now" : "") + '" data-entity="' + esc(ev.def.entity) + '"' +
-        (solid ? ' style="--c:rgb(' + ev.def.rgb + ')"' : "") + ">" +
+        (solid || this._flat ? ' style="--c:rgb(' + ev.def.rgb + ')"' : "") + ">" +
         '<div class="tint" style="background:rgb(' + ev.def.rgb + ');' + (solid ? "" : "box-shadow:0 0 10px rgba(" + ev.def.rgb + ",0.65);") + '"></div>' +
         timeCol +
         '<div class="body"><span class="summary">' + esc(ev.summary) + "</span>" + loc + "</div>" +
