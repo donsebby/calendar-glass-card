@@ -1,4 +1,4 @@
-const CARD_VERSION = "1.3.0-dev";
+const CARD_VERSION = "1.3.1-dev";
 // eslint-disable-next-line no-console
 console.info(`%c CALENDAR-GLASS-CARD %c v${CARD_VERSION} `, "color: white; background: #6366f1; font-weight: 700;", "color: #6366f1; background: white; font-weight: 700;");
 
@@ -228,6 +228,7 @@ class CalendarGlassCard extends HTMLElement {
         thisWeek: "Diese Woche",
         allDay: "Ganzt\u00e4gig",
         noEvents: "Keine Termine",
+        free: (k) => "Keine Termine in den n\u00e4chsten " + k + " Tagen",
         events: (k) => k + (k === 1 ? " Termin" : " Termine"),
         inRange: "in diesem Zeitraum",
         updated: "Aktualisiert",
@@ -241,6 +242,7 @@ class CalendarGlassCard extends HTMLElement {
         thisWeek: "This week",
         allDay: "All day",
         noEvents: "No events",
+        free: (k) => "No events in the next " + k + " days",
         events: (k) => k + (k === 1 ? " event" : " events"),
         inRange: "in this period",
         updated: "Updated",
@@ -488,6 +490,10 @@ class CalendarGlassCard extends HTMLElement {
       .wrap.flat .ev:hover, .wrap.flat.solid .ev:hover { background: color-mix(in srgb, var(--primary-text-color, #fff) 6%, transparent); }
       .wrap.flat .ev.now, .wrap.flat.solid .ev.now, .wrap.flat.solid .ev.now:hover { background: color-mix(in srgb, var(--c) 16%, transparent); box-shadow:none; }
       .wrap.flat .ev.allday { grid-template-columns:3px 1fr; padding:8px 6px; }
+      .wrap.flat .day-name, .wrap.flat .count, .wrap.flat .empty, .wrap.flat .badge-today { white-space:nowrap; }
+      .wrap.flat .day-name { min-width:0; overflow:hidden; text-overflow:ellipsis; }
+      .wrap.flat .free { display:flex; align-items:center; gap:12px; padding:8px 6px; font-size:14px; color:var(--secondary-text-color, rgba(255,255,255,0.6)); }
+      .wrap.flat .free .tint { min-height:18px; background:rgba(255,255,255,0.2); }
     `;
     this.shadowRoot.appendChild(style);
     this._root = document.createElement("div");
@@ -602,7 +608,10 @@ class CalendarGlassCard extends HTMLElement {
           }).join("") + "</div>"
         : "") +
       "</div>" +
-      '<div class="list">' + days.map(dayHtml).join("") + "</div>" +
+      // flat and nothing in the whole range: one calm line instead of empty day heads.
+      (this._flat && !total && !this._error
+        ? '<div class="list"><div class="free"><div class="tint"></div>' + esc(this._config.free_label || (this._days <= 1 ? this._t("noEvents") : this._t("free", this._days))) + "</div></div>"
+        : '<div class="list">' + days.map(dayHtml).join("") + "</div>") +
       (this._error ? '<div class="msg">' + esc(this._t("loadError")) + esc(this._error) + "</div>" : "") +
       (this._showFooter
         ? '<div class="foot"><span>' + esc(this._t("events", total)) + " " + esc(this._config.range_label || this._t("inRange")) + "</span>" +
