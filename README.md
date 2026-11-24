@@ -51,6 +51,7 @@ entities:
 | `show_legend` | boolean | `true` | Legende anzeigen (nur bei >1 Kalender) |
 | `show_footer` | boolean | `true` | Fußzeile mit Gesamtzahl & Aktualisierungszeit |
 | `highlight_today` | boolean | `true` | Heute farblich hervorheben |
+| `free_label` | string | *(automatisch)* | Text bei `flat`, wenn im Zeitraum nichts ansteht |
 | `flat` | boolean | `false` | Eine Fläche statt Kästen in der Karte: kein Rahmen um „Heute“, Termine als schlichte Zeilen mit Farbstrich, ganztägige Termine ohne „Ganztägig“-Spalte |
 | `refresh_minutes` | number | `15` | Intervall für automatisches Neuladen der Termine |
 | `look` | string | — (Theme, sonst glass) | `solid` = ruhige, feste Flächen statt Glas, `glass` erzwingt Glas, siehe *Solid look*. Ohne die Option (oder mit `theme`) folgt die Karte der Theme-Variable `lg-look`, sonst bleibt sie im Glas-Stil. Im visuellen Editor: „Stil: Vom Theme / Glas / Solide“ |
@@ -120,6 +121,9 @@ lg-look: solid                           # solid or glass for all cards (see Sol
 Without them nothing changes. Options set on the card itself (e.g. `blur`) still win.
 
 ## Changelog
+
+### 1.3.1
+- `flat`: Tageszeilen brechen in schmalen Spalten nicht mehr um. Stehen im ganzen Zeitraum keine Termine an, zeigt die Karte eine ruhige Zeile („Keine Termine in den nächsten 4 Tagen“, Text per `free_label` änderbar) statt leerer Tagesköpfe.
 
 ### 1.3.0
 - Neue Option `flat: true`: keine Kästen mehr innerhalb der Karte. „Heute“ ist nur noch über das Badge markiert, Termine sind schlichte Zeilen mit Farbstrich, ganztägige Termine ohne „Ganztägig“-Spalte. Funktioniert mit Glas und Solid. Ohne die Option sieht die Karte aus wie bisher.
