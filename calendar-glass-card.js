@@ -458,15 +458,15 @@ class CalendarGlassCard extends HTMLElement {
       .wrap.solid .ev {
         box-sizing:border-box; min-height:44px;
         background:var(--s-tile);
-        border:1px solid rgba(255,255,255,0.04);
+        border:var(--lg-tile-edge, 1px solid rgba(255,255,255,0.04));
         border-radius:calc(var(--lg-radius, 20px) - 4px);
-        box-shadow:none;
+        box-shadow:var(--lg-tile-shadow, none);
         transition:background .2s ease;
       }
-      .wrap.solid .ev:hover { background: color-mix(in srgb, var(--primary-text-color, #fff) 5%, var(--s-tile)); border-color:rgba(255,255,255,0.04); }
+      .wrap.solid .ev:hover { background: color-mix(in srgb, var(--primary-text-color, #fff) 5%, var(--s-tile)); }
       .wrap.solid .ev.now, .wrap.solid .ev.now:hover {
         background: color-mix(in srgb, var(--c) 20%, var(--s-tile));
-        border-color:rgba(255,255,255,0.04); box-shadow:none;
+        box-shadow:var(--lg-tile-shadow, none);
       }
       .wrap.solid .tint { box-shadow:none; }
       .wrap.solid .t1 { font-size:15px; font-weight:500; letter-spacing:0; }

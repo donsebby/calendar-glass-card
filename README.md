@@ -122,6 +122,9 @@ Without them nothing changes. Options set on the card itself (e.g. `blur`) still
 
 ## Changelog
 
+### Unreleased
+- Solid look: inner surfaces take their edge and shadow from the theme (`--lg-tile-edge`, `--lg-tile-shadow`), so a glass theme can give them a light glass edge.
+
 ### 1.3.1
 - `flat`: Tageszeilen brechen in schmalen Spalten nicht mehr um. Stehen im ganzen Zeitraum keine Termine an, zeigt die Karte eine ruhige Zeile („Keine Termine in den nächsten 4 Tagen“, Text per `free_label` änderbar) statt leerer Tagesköpfe.
 
