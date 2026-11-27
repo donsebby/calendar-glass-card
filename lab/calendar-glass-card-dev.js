@@ -1,4 +1,4 @@
-const CARD_VERSION = "1.3.2-dev";
+const CARD_VERSION = "1.3.1-dev";
 // eslint-disable-next-line no-console
 console.info(`%c CALENDAR-GLASS-CARD %c v${CARD_VERSION} `, "color: white; background: #6366f1; font-weight: 700;", "color: #6366f1; background: white; font-weight: 700;");
 
@@ -458,15 +458,15 @@ class CalendarGlassCard extends HTMLElement {
       .wrap.solid .ev {
         box-sizing:border-box; min-height:44px;
         background:var(--s-tile);
-        border:1px solid rgba(255,255,255,0.04);
+        border:var(--lg-tile-edge, 1px solid rgba(255,255,255,0.04));
         border-radius:calc(var(--lg-radius, 20px) - 4px);
-        box-shadow:none;
+        box-shadow:var(--lg-tile-shadow, none);
         transition:background .2s ease;
       }
-      .wrap.solid .ev:hover { background: color-mix(in srgb, var(--primary-text-color, #fff) 5%, var(--s-tile)); border-color:rgba(255,255,255,0.04); }
+      .wrap.solid .ev:hover { background: color-mix(in srgb, var(--primary-text-color, #fff) 5%, var(--s-tile)); }
       .wrap.solid .ev.now, .wrap.solid .ev.now:hover {
         background: color-mix(in srgb, var(--c) 20%, var(--s-tile));
-        border-color:rgba(255,255,255,0.04); box-shadow:none;
+        box-shadow:var(--lg-tile-shadow, none);
       }
       .wrap.solid .tint { box-shadow:none; }
       .wrap.solid .t1 { font-size:15px; font-weight:500; letter-spacing:0; }
@@ -478,17 +478,6 @@ class CalendarGlassCard extends HTMLElement {
       @media (prefers-reduced-motion: reduce) {
         .wrap.solid .ev, .wrap.solid .legend-item, .wrap.solid .dot { transition:none; }
       }
-      /* surface: theme - the panel takes the theme's card surface, blur,
-         border, shadow and rounding instead of its own glass. */
-      .wrap.theme {
-        background: var(--pane-surface, var(--ha-card-background, var(--card-background-color, rgba(30,32,40,0.6))));
-        backdrop-filter: var(--pane-backdrop, var(--ha-card-backdrop-filter, none));
-        -webkit-backdrop-filter: var(--pane-backdrop, var(--ha-card-backdrop-filter, none));
-        border: var(--ha-card-border-width, 1px) solid var(--pane-border, var(--ha-card-border-color, rgba(255,255,255,0.08)));
-        box-shadow: var(--ha-card-box-shadow, none);
-        border-radius: var(--pane-radius, var(--ha-card-border-radius, 20px));
-      }
-      .wrap.theme .sheen { display:none; }
       /* flat: one surface only (opt-in). Today is marked by its badge, events
          are rows with the colour stripe - no boxes inside the card. */
       .wrap.flat .today-block, .wrap.flat.solid .today-block { margin:0; padding:0; background:none; box-shadow:none; border-radius:0; }
@@ -510,7 +499,6 @@ class CalendarGlassCard extends HTMLElement {
     this._root = document.createElement("div");
     this._root.className = "wrap";
     this._root.classList.toggle("flat", this._flat);
-    this._root.classList.toggle("theme", this._config.surface === "theme");
     this.shadowRoot.appendChild(this._root);
   }
 
