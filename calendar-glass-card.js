@@ -429,7 +429,7 @@ class CalendarGlassCard extends HTMLElement {
         --s-tile: var(--lg-tile-bg, color-mix(in srgb, var(--primary-text-color, #fff) 8%, transparent));
         padding:16px;
         border-radius:var(--lg-radius, 20px);
-        background: var(--surface, color-mix(in srgb, var(--card-background-color, #1c1f28) 88%, transparent));
+        background: var(--lg-tile-bg, var(--surface, color-mix(in srgb, var(--card-background-color, #1c1f28) 88%, transparent)));
         backdrop-filter: var(--lg-panel-backdrop, none); -webkit-backdrop-filter: var(--lg-panel-backdrop, none);
         border: var(--lg-tile-edge, 1px solid rgba(255,255,255,0.06));
         box-shadow: var(--lg-tile-shadow, none);
