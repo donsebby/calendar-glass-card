@@ -1,4 +1,4 @@
-const CARD_VERSION = "1.3.1";
+const CARD_VERSION = "1.4.0";
 // eslint-disable-next-line no-console
 console.info(`%c CALENDAR-GLASS-CARD %c v${CARD_VERSION} `, "color: white; background: #6366f1; font-weight: 700;", "color: #6366f1; background: white; font-weight: 700;");
 
